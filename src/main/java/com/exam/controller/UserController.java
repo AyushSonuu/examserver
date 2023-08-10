@@ -148,7 +148,8 @@ public class UserController {
 //    }
 
     @PutMapping("/forgot_password")
-    public void updatePassword(@RequestBody JwtRequest jwtRequest){
+    public String updatePassword(@RequestBody JwtRequest jwtRequest){
+
         User user = userService.getUser(jwtRequest.getUsername());
         if(user!=null){
 
@@ -157,6 +158,8 @@ public class UserController {
             emailSender.send(
                     user.getEmail(),
                     emailBuilder.buildEmail(user.getFirstName(), link));
+
+            return "link sent to your mail kindly verify to update vredentials";
 
         }
         throw new IllegalStateException("No User Found With User Name "+jwtRequest.getUsername());
