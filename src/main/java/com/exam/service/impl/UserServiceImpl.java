@@ -1,13 +1,21 @@
 package com.exam.service.impl;
 
+import com.exam.email.EmailSender;
 import com.exam.model.User;
 import com.exam.model.UserRole;
 import com.exam.repo.RoleRepository;
 import com.exam.repo.UserRepository;
+import com.exam.service.ConfirmationTokenService;
 import com.exam.service.UserService;
+import com.exam.token.ConfirmationToken;
+import com.exam.validator.EmailBuilder;
+import com.exam.validator.EmailValidator;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Service
@@ -19,14 +27,45 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private RoleRepository roleRepository;
 
-    /*
-    creating user
-     */
+    @Autowired
+    private  ConfirmationTokenService confirmationTokenService;
+    @Autowired
+    private EmailSender emailSender;
+    @Autowired
+    private EmailBuilder emailBuilder;
+
+    @Autowired
+    private HttpServletRequest request;
+
+
+    public String getDomain() {
+        String domain = request.getRequestURL().toString().replace(request.getRequestURI(), "");
+        return (domain);
+    }
+
+
     @Override
     public User createUser(User user, Set<UserRole> userRoles) throws Exception {
 
-        User local = this.userRepository.findByUserName(user.getUsername());
-        if(local!=null){
+        User local = this.userRepository.findByUsername(user.getUsername());
+        User mailUser = userRepository.findByEmail(user.getEmail());
+        if(local!=null || mailUser!=null ){
+            if(!mailUser.isEnabled()){
+                ConfirmationToken confirmationToken = confirmationTokenService.getTokenByEmail(mailUser.getEmail());
+                String token = confirmationToken.getToken();
+                String link = "http://localhost:8080/user/confirm?token=" + token;
+                //update time
+                confirmationToken.setCreatedAt(LocalDateTime.now());
+                confirmationToken.setExpiresAt(LocalDateTime.now().plusMinutes(15));
+                confirmationTokenService.saveConfirmationToken(confirmationToken);
+
+                emailSender.send(
+                        user.getEmail(),
+                        emailBuilder.buildEmail(user.getFirstName(), link));
+
+                return mailUser;
+
+            }
             System.out.println("User is already there");
             throw new Exception("User Already Preasent");
 
@@ -43,38 +82,91 @@ public class UserServiceImpl implements UserService {
     //getting by user name
     @Override
     public User getUser(String username) {
-        return this.userRepository.findByUserName(username);
+        return this.userRepository.findByUsername(username);
     }
 
-    /**
-     * @param userId
-     */
     @Override
     public void deletUser(Long userId) {
         this.userRepository.deleteById(userId);
     }
 
     /**
-     * @param user
+     * @param username
      */
     @Override
+    public void deletUser(String username) {
+        this.userRepository.deleteByUsername(username);
+
+    }
+
+    @Override
     public void updateUser(User user) {
-        User existingUser = userRepository.findById(user.getId()).orElse(null);
+        User existingUser = userRepository.findByUsername(user.getUsername());
 
         if (existingUser != null) {
             // Update properties that can be modified
-            existingUser.setUserName(user.getUsername());
+//            existingUser.setUsername(user.getUsername());
             existingUser.setPassword(user.getPassword());
             existingUser.setFirstName(user.getFirstName());
             existingUser.setLastName(user.getLastName());
-            existingUser.setEmail(user.getEmail());
+//            existingUser.setEmail(user.getEmail());
             existingUser.setPhone(user.getPhone());
-            existingUser.setEnabled(user.isEnabled());
             existingUser.setProfile(user.getProfile());
 
             // Save the updated user
             userRepository.save(existingUser);
+            emailSender.send(user.getEmail(),emailBuilder.buildEmail(user));
         }
 
     }
+
+
+    @Override
+    public User getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email);
+        if(user!=null){
+            return user;
+        }
+        throw new IllegalStateException("User With This Email Is Not Found");
+
+    }
+
+    @Transactional
+    public String confirmToken(String token) {
+        ConfirmationToken confirmationToken = confirmationTokenService
+                .getToken(token)
+                .orElseThrow(() ->
+                        new IllegalStateException("token not found"));
+
+        if (confirmationToken.getConfirmedAt() != null) {
+            throw new IllegalStateException("email already confirmed");
+        }
+
+        LocalDateTime expiredAt = confirmationToken.getExpiresAt();
+
+        if (expiredAt.isBefore(LocalDateTime.now())) {
+            throw new IllegalStateException("token expired");
+        }
+
+        confirmationTokenService.setConfirmedAt(token);
+        User euser = userRepository.findByEmail(confirmationToken.getUser().getEmail());
+        if(euser!=null){
+            euser.setEnabled(true);
+        }else{
+            throw new IllegalStateException("user not fopund with this email");
+        }
+
+//        appUserService.enableAppUser(
+//                confirmationToken.getAppUser().getEmail());
+        return "confirmed";
+    }
+
+    /**
+     * @return
+     */
+    @Override
+    public String VerificationMailForPasswordUpdate(String password) {
+        return null;
+    }
+
 }

@@ -11,7 +11,16 @@ public interface UserService {
     public  User getUser(String username);
 
     public void deletUser(Long userId);
+    public void deletUser(String username);
 
     public void updateUser(User user);
+
+    public User getUserByEmail(String email);
+
+    public String confirmToken(String token);
+
+    public String VerificationMailForPasswordUpdate(String password);
+
+    public String getDomain();
 
 }

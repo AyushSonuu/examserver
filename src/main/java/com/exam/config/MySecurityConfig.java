@@ -6,12 +6,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -26,41 +29,22 @@ public class MySecurityConfig {
     private UserDetailsServiceImpl userDetailsService;
     @Autowired
     private JwtAuthenticationEntryPoint unauthorizedHandler;
-
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-//        http.authorizeHttpRequests(
-//                auth -> {
-//                    auth
-//                            .anyRequest().authenticated();
-//                });
-//
-//        http.sessionManagement(
-//                session ->
-//                        session.sessionCreationPolicy(
-//                                SessionCreationPolicy.STATELESS)
-//        );
-//
-//        //http.formLogin();
-//        http.httpBasic(withDefaults());
-//
-//        http.csrf(csrf -> csrf.disable());
-//
-//        //http.csrf(AbstractHttpConfigurer::disable);
-//
-//        http.headers(headers -> headers.frameOptions(frameOptionsConfig-> frameOptionsConfig.disable()));
-//
-//        // http.headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
-//
-//        return http.build();
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/generate_token","/user/").permitAll()
+                .authorizeRequests(auth -> auth
+
+                        .requestMatchers("/v1/generate_token","/v1/user/forgot_password",
+                                "/v1/user/",
+                                "/v1/user/confirm",
+                                "/v1/user/forgot_user_name",
+                                "/swagger-ui/*",
+                                "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
                         .anyRequest()
                         .authenticated())
@@ -69,19 +53,31 @@ public class MySecurityConfig {
                 .sessionManagement( session ->session
                         .sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS));
-
+//        http.formLogin(withDefaults());
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
     @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder() ;
     }
 
+//    @Bean
+//    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+//        return authenticationConfiguration.getAuthenticationManager();
+//    }
+
+
+
+//    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+//        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
+//    }
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManagerBean(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
+//     @Bean
+
 
 }

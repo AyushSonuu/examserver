@@ -22,15 +22,17 @@ public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
-    private String userName;
     @JsonIgnore
+    private Long id;
+    private String username;
+//    @JsonIgnore
     private String password;
     private String firstName;
     private String lastName;
     private String email;
     private String phone;
-    private boolean enabled = true;
+    @JsonIgnore
+    private boolean enabled = false;
     private String profile;
 
     @JsonIgnore
@@ -59,7 +61,7 @@ public class User implements UserDetails {
      */
     @Override
     public String getUsername() {
-        return userName;
+        return username;
     }
 
 
@@ -85,5 +87,10 @@ public class User implements UserDetails {
     @Override
     public boolean isCredentialsNonExpired() {
         return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
     }
 }
