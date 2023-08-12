@@ -1,7 +1,7 @@
 package com.exam.service.impl;
 
-import com.exam.model.User;
-import com.exam.repo.UserRepository;
+import com.exam.model.user.User;
+import com.exam.repo.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

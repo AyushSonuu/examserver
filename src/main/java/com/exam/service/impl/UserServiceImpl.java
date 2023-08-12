@@ -1,15 +1,13 @@
 package com.exam.service.impl;
 
 import com.exam.email.EmailSender;
-import com.exam.model.User;
-import com.exam.model.UserRole;
-import com.exam.repo.RoleRepository;
-import com.exam.repo.UserRepository;
-import com.exam.service.ConfirmationTokenService;
+import com.exam.model.user.User;
+import com.exam.model.user.UserRole;
+import com.exam.repo.user.RoleRepository;
+import com.exam.repo.user.UserRepository;
 import com.exam.service.UserService;
-import com.exam.token.ConfirmationToken;
-import com.exam.validator.EmailBuilder;
-import com.exam.validator.EmailValidator;
+import com.exam.model.token.ConfirmationToken;
+import com.exam.email.validator.EmailBuilder;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,23 +49,24 @@ public class UserServiceImpl implements UserService {
         User mailUser = userRepository.findByEmail(user.getEmail());
         if(local!=null || mailUser!=null ){
             if(!mailUser.isEnabled()){
-                ConfirmationToken confirmationToken = confirmationTokenService.getTokenByEmail(mailUser.getEmail());
-                String token = confirmationToken.getToken();
-                String link = "http://localhost:8080/user/confirm?token=" + token;
-                //update time
-                confirmationToken.setCreatedAt(LocalDateTime.now());
-                confirmationToken.setExpiresAt(LocalDateTime.now().plusMinutes(15));
-                confirmationTokenService.saveConfirmationToken(confirmationToken);
+//                ConfirmationToken confirmationToken = confirmationTokenService.getTokenByEmail(mailUser.getEmail());
+//                String token = confirmationToken.getToken();
+//                String link = "http://localhost:8080/user/confirm?token=" + token;
+//                //update time
+//                confirmationToken.setCreatedAt(LocalDateTime.now());
+//                confirmationToken.setExpiresAt(LocalDateTime.now().plusMinutes(15));
+//                confirmationTokenService.saveConfirmationToken(confirmationToken);
+//
+//                emailSender.send(
+//                        user.getEmail(),
+//                        emailBuilder.buildEmail(user.getFirstName(), link));
+//
+//                return mailUser;
 
-                emailSender.send(
-                        user.getEmail(),
-                        emailBuilder.buildEmail(user.getFirstName(), link));
-
-                return mailUser;
+                throw new IllegalStateException("please Enable your account using email Verification");
 
             }
             System.out.println("User is already there");
-            throw new Exception("User Already Preasent");
 
         }else{
             for(UserRole ur: userRoles){

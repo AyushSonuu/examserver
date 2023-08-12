@@ -1,13 +1,13 @@
 package com.exam.controller;
 
 import com.exam.email.EmailSender;
-import com.exam.model.*;
+import com.exam.exception.UserNotFoundException;
+import com.exam.model.user.*;
 import com.exam.service.UserService;
-import com.exam.token.ConfirmationToken;
-import com.exam.service.ConfirmationTokenService;
-import com.exam.validator.EmailBuilder;
-import com.exam.validator.EmailValidator;
-import jakarta.servlet.http.HttpServletRequest;
+import com.exam.model.token.ConfirmationToken;
+import com.exam.service.impl.ConfirmationTokenService;
+import com.exam.email.validator.EmailBuilder;
+import com.exam.email.validator.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,7 +27,6 @@ public class UserController {
 
     @Autowired
     private UserService userService;
-
     @Autowired
     private  PasswordEncoder bCryptPasswordEncoder;
     @Autowired
@@ -40,7 +39,7 @@ public class UserController {
     private EmailBuilder emailBuilder;
 
     @PostMapping("/forgot_user_name")
-    public String forgotUserName(@RequestParam("email") String email ) throws Exception {
+    public ResponseEntity<CustomResponse> forgotUserName(@RequestParam("email") String email ) throws Exception {
         boolean isValidEmail = emailValidator.test(email);
         if(!isValidEmail){
             throw new IllegalStateException("email not valid");
@@ -50,11 +49,11 @@ public class UserController {
                 user.getEmail(),
                 emailBuilder.buildEmail(user));
 
-        return "credentials send to your mail";
+        return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"User Name Sent To Email",null));
     }
 
     @PutMapping("/update_credentials")
-    public String updateCreds(@RequestBody User user ) throws Exception {
+    public ResponseEntity<CustomResponse> updateCreds(@RequestBody User user ) throws Exception {
         User ourUser = userService.getUser(user.getUsername());
         if(ourUser==null || user.getEmail()!=ourUser.getEmail()){
             throw new IllegalStateException("You Cannot Change Username And Password");
@@ -66,13 +65,13 @@ public class UserController {
                 user.getEmail(),
                 emailBuilder.buildEmail(user));
 
-        return "credentials send to your mail";
+        return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"Updated Your Credentials",null));
     }
 
 
     //creating user
     @PostMapping("/")
-    public ResponseEntity<String> createUser(@RequestBody User user){
+    public ResponseEntity<CustomResponse> createUser(@RequestBody User user){
 
         boolean isValidEmail = emailValidator.test(user.getEmail());
         if(!isValidEmail){
@@ -116,39 +115,51 @@ public class UserController {
                 emailBuilder.buildEmail(user.getFirstName(), link));
 
 
-        return ResponseEntity.ok("Varification Link Sent");
+        return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"Registration Successfull",user));
 
 
 
     }
+
+
+    @GetMapping("/resend_confirmation_email/{email}")
+    public ResponseEntity<CustomResponse> resendConfirmationEmail(@RequestParam String email){
+        User user = userService.getUserByEmail(email);
+        if(user==null){
+            throw new UserNotFoundException("User With Email "+email+"Is Not Found");
+        }
+        ConfirmationToken token = (confirmationTokenService.getTokenByEmail(email));
+        String link = userService.getDomain()+"/v1/user/confirm?token=" + token;
+        System.out.println(link);
+        emailSender.send(
+                user.getEmail(),
+                emailBuilder.buildEmail(user.getFirstName(), link));
+        return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"Account Activation Link Sent To Your Mail",null)) ;
+
+    }
+
     @GetMapping(path = "confirm")
-    public String confirm(@RequestParam("token") String token) {
-        return userService.confirmToken(token);
+    public ResponseEntity<CustomResponse> confirm(@RequestParam("token") String token) {
+        return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),userService.confirmToken(token),null)) ;
     }
 
     @GetMapping("/{username}")
-    public User getUser(@PathVariable String username){
+    public ResponseEntity<CustomResponse> getUser(@PathVariable String username){
 
-        return this.userService.getUser(username);
+        return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"User Fetched Successfully", this.userService.getUser(username)));
     }
 
     @DeleteMapping("/delete_account")
-    public void deleteUser(@RequestBody JwtRequest request){
+    public ResponseEntity<CustomResponse> deleteUser(@RequestBody JwtRequest request){
 
         this.userService.deletUser(request.getUsername());
         emailSender.send(this.userService.getUser(request.getUsername()).getEmail(),"Thank you for being part og us your Account had been deleted");
+        return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"your account deleted",null));
     }
 
-//    @PutMapping("/update_credentials/{username}")
-//    public void updateUser(@PathVariable String username, @RequestBody User updatedUser){
-//
-//
-//        this.userService.updateUser(updatedUser);
-//
-//    }
 
     @PutMapping("/forgot_password")
-    public String updatePassword(@RequestBody JwtRequest jwtRequest){
+    public ResponseEntity<CustomResponse> updatePassword(@RequestBody JwtRequest jwtRequest){
 
         User user = userService.getUser(jwtRequest.getUsername());
         if(user!=null){
@@ -159,20 +170,21 @@ public class UserController {
                     user.getEmail(),
                     emailBuilder.buildEmail(user.getFirstName(), link));
 
-            return "link sent to your mail kindly verify to update vredentials";
+            return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"link sent to your mail kindly verify to update vredentials",null));
 
         }
         throw new IllegalStateException("No User Found With User Name "+jwtRequest.getUsername());
 
 
     }
+
     @GetMapping(path = "confirm_password_email")
-    public String confirmPasswordEmail(@RequestParam("username") String username,@RequestParam("password") String password) {
+    public ResponseEntity<CustomResponse> confirmPasswordEmail(@RequestParam("username") String username, @RequestParam("password") String password) {
         password = bCryptPasswordEncoder.encode(password);
         User user = userService.getUser(username);
         if(user!=null){
             userService.updateUser(user);
-            return "Password Updated Successfully";
+            return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"Password Updated Successfully",null));
         }
         throw new IllegalStateException("invalid username");
     }

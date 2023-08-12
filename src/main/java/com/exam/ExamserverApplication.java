@@ -1,14 +1,13 @@
 package com.exam;
 
-import com.exam.model.Role;
-import com.exam.model.User;
-import com.exam.model.UserRole;
+import com.exam.model.user.Role;
+import com.exam.model.user.User;
+import com.exam.model.user.UserRole;
 import com.exam.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
