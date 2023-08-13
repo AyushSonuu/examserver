@@ -53,7 +53,7 @@ public class UserServiceImpl implements UserService {
                 throw new IllegalStateException("please Enable your account using email Verification");
 
             }
-            System.out.println("User is already there");
+      throw new IllegalStateException("User is already registered try to log in ");
 
         }else{
             for(UserRole ur: userRoles){
