@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/v1")
+@CrossOrigin("*")
 public class AuthenticatController {
 
     @Autowired

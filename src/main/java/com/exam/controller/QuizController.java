@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 @RestController
-@CrossOrigin
+@CrossOrigin("*")
 @RequestMapping("/v1/quiz")
 public class QuizController {
     

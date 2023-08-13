@@ -16,6 +16,7 @@ import java.util.Set;
  */
 @RestController
 @RequestMapping("/v1/category")
+@CrossOrigin("*")
 public class CategoryController {
 
     @Autowired
