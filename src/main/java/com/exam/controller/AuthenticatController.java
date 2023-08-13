@@ -15,9 +15,9 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
 import java.security.Principal;
 import java.time.LocalDateTime;
+
 
 @RestController
 @RequestMapping("/v1")
@@ -30,6 +30,14 @@ public class AuthenticatController {
     @Autowired
     private JwtUtil jwtUtil;
 
+
+    /**
+     * Endpoint for generating a JWT token by authenticating a user.
+     *
+     * @param jwtRequest The JSON object containing the username and password for authentication.
+     * @return A ResponseEntity containing a CustomResponse with the generated JWT token.
+     * @throws Exception if there is an issue with authentication or the user is not found.
+     */
     @PostMapping("/generate_token")
     public ResponseEntity<CustomResponse> generateToken(@RequestBody JwtRequest jwtRequest) throws Exception {
         try{
@@ -43,11 +51,16 @@ public class AuthenticatController {
         ///authenticated
         UserDetails userDetails =this.userDetailsService.loadUserByUsername(jwtRequest.getUsername());
         String token = this.jwtUtil.generateToken(userDetails);
-        return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"token Successfully Generated",new JwtResponse(token).getToken()));
+        return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"Token Successfully Generated",new JwtResponse(token).getToken()));
     }
 
-
-
+    /**
+     * Helper method to authenticate a user using the provided username and password.
+     *
+     * @param username The username of the user.
+     * @param password The password of the user.
+     * @throws Exception if authentication fails due to disabled account, bad credentials, or other errors.
+     */
     private void authenticate(String username, String password) throws Exception {
         try{
             System.out.println(username+" "+password);
@@ -61,7 +74,12 @@ public class AuthenticatController {
         }
     }
 
-
+    /**
+     * Endpoint to retrieve details about the current authenticated user.
+     *
+     * @param principal The Principal object representing the current user.
+     * @return A ResponseEntity containing a CustomResponse with details about the current user.
+     */
     @GetMapping("/current-user")
     public ResponseEntity<CustomResponse> getCUrrentUser(Principal principal){
 

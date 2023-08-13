@@ -1,0 +1,14 @@
+com.exam
+com.exam.config
+com.exam.controller
+com.exam.email
+com.exam.email.validator
+com.exam.exception
+com.exam.model.quiz
+com.exam.model.token
+com.exam.model.user
+com.exam.repo.quiz
+com.exam.repo.user
+com.exam.service
+com.exam.service.impl
+com.exam.service.quizimpl

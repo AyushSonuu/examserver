@@ -6,30 +6,33 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 
+/**
+ * Custom implementation of AuthenticationEntryPoint used to handle unauthorized access attempts.
+ * This component is invoked by Spring Security when an authentication error occurs,
+ * and it sends an HTTP response with an appropriate error code and message.
+ *
+ * @author  AYUSH
+ */
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     /**
      * Commences an authentication scheme.
      * <p>
-     * <code>ExceptionTranslationFilter</code> will populate the <code>HttpSession</code>
-     * attribute named
-     * <code>AbstractAuthenticationProcessingFilter.SPRING_SECURITY_SAVED_REQUEST_KEY</code>
-     * with the requested target URL before calling this method.
-     * <p>
-     * Implementations should modify the headers on the <code>ServletResponse</code> as
-     * necessary to commence the authentication process.
+     * This method is invoked by Spring Security when an authentication exception occurs.
+     * It sends an HTTP response with an unauthorized error code and message.
      *
-     * @param request       that resulted in an <code>AuthenticationException</code>
-     * @param response      so that the user agent can begin authentication
-     * @param authException that caused the invocation
+     * @param request       The HttpServletRequest that resulted in an AuthenticationException.
+     * @param response      The HttpServletResponse so that the user agent can begin authentication.
+     * @param authException The AuthenticationException that caused the invocation.
+     * @throws IOException If an I/O exception occurs while sending the response.
+     * @throws ServletException If a servlet-related exception occurs.
      */
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-
+        // Send an HTTP response with an unauthorized error code and message
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED,"Unauthorized : Server");
 
     }

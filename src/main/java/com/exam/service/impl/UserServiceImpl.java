@@ -49,19 +49,6 @@ public class UserServiceImpl implements UserService {
         User mailUser = userRepository.findByEmail(user.getEmail());
         if(local!=null || mailUser!=null ){
             if(!mailUser.isEnabled()){
-//                ConfirmationToken confirmationToken = confirmationTokenService.getTokenByEmail(mailUser.getEmail());
-//                String token = confirmationToken.getToken();
-//                String link = "http://localhost:8080/user/confirm?token=" + token;
-//                //update time
-//                confirmationToken.setCreatedAt(LocalDateTime.now());
-//                confirmationToken.setExpiresAt(LocalDateTime.now().plusMinutes(15));
-//                confirmationTokenService.saveConfirmationToken(confirmationToken);
-//
-//                emailSender.send(
-//                        user.getEmail(),
-//                        emailBuilder.buildEmail(user.getFirstName(), link));
-//
-//                return mailUser;
 
                 throw new IllegalStateException("please Enable your account using email Verification");
 
