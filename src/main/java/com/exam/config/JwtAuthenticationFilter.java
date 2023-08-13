@@ -88,7 +88,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }else{
             // Invalid token format
             System.out.println("Invalid Token ");
-           throw  new IllegalStateException("Invalid Token");
+//           throw  new IllegalStateException("Invalid Token");
 
         }
         // Invalid token format
