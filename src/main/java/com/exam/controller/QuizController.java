@@ -1,5 +1,6 @@
 package com.exam.controller;
 
+import com.exam.model.quiz.Category;
 import com.exam.model.quiz.Quiz;
 import com.exam.model.user.CustomResponse;
 import com.exam.service.QuizService;
@@ -8,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -46,6 +48,27 @@ public class QuizController {
     public ResponseEntity<CustomResponse> deleteQuiz(@PathVariable("quizId") Long quizId){
         this.quizService.deleteQuiz(quizId);
         return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"Quiz Deleted",null));
+    }
+
+    @GetMapping("/category/{cid}")
+    public ResponseEntity<CustomResponse> getQuizzesByCategory(@PathVariable("cid") Long cid){
+        Category category =new Category();
+        category.setCid(cid);
+        List<Quiz> quizzesOfCategory = this.quizService.getQuizzesOfCategory(category);
+        return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"quizzes by category",quizzesOfCategory));
+    }
+    @GetMapping("/active")
+    public ResponseEntity<CustomResponse> getActiveQuizzes(@PathVariable("cid") Long cid){
+        Category category = new Category();
+        category.setCid(cid);
+        List<Quiz> activeQuizzesOfCategory = this.quizService.getActiveQuizzesOfCategory(category);
+        return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"quizzes by category",activeQuizzesOfCategory));
+    }
+
+    @GetMapping("/category/active/{cid}")
+    public ResponseEntity<CustomResponse> getActiveQuizzesByCategory(){
+        List<Quiz> activeQuizzes = this.quizService.getActiveQuizzes();
+        return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"quizzes by category",activeQuizzes));
     }
 
 }
