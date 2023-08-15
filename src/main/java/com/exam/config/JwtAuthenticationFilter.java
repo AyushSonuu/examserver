@@ -53,6 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Extract the JWT token from the Authorization header
        final String requestTokenHeader =  request.getHeader("Authorization");
         System.out.println(requestTokenHeader);
+        response.setHeader("Permissions-Policy", "");
         String username = null;
         String jwtToken =null;
 

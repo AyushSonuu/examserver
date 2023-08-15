@@ -31,7 +31,7 @@ public class QuizController {
     }
 
     @GetMapping("/")
-    public ResponseEntity<CustomResponse> getQuizes(@RequestBody Quiz quiz){
+    public ResponseEntity<CustomResponse> getQuizes(){
         Set<Quiz> quizzes = this.quizService.getQuizzes();
         return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"Quizzes Fetched",quizzes));
     }
