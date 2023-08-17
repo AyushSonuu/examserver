@@ -66,8 +66,10 @@ public class QuizController {
     }
 
     @GetMapping("/category/active/{cid}")
-    public ResponseEntity<CustomResponse> getActiveQuizzesByCategory(){
-        List<Quiz> activeQuizzes = this.quizService.getActiveQuizzes();
+    public ResponseEntity<CustomResponse> getActiveQuizzesByCategory(@PathVariable("cid") Long cid){
+        Category category = new Category();
+        category.setCid(cid);
+        List<Quiz> activeQuizzes = this.quizService.getActiveQuizzesOfCategory(category);
         return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"quizzes by category",activeQuizzes));
     }
 
