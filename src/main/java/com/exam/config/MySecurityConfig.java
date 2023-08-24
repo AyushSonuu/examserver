@@ -69,6 +69,8 @@ public class MySecurityConfig {
 
                         .requestMatchers("/v1/generate_token","/v1/user/forgot_password",
                                 "/v1/user/",
+                                "/v1/user/teacher/",
+                                "/v1/user/resend_confirmation_email/{email}",
                                 "/v1/user/confirm",
                                 "/v1/user/forgot_user_name",
                                 "/swagger-ui/*",

@@ -3,6 +3,7 @@ package com.exam.controller;
 import com.exam.email.EmailSender;
 import com.exam.exception.UserNotFoundException;
 import com.exam.model.user.*;
+import com.exam.service.StudentTeacherService;
 import com.exam.service.UserService;
 import com.exam.model.token.ConfirmationToken;
 import com.exam.service.impl.ConfirmationTokenService;
@@ -14,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -64,6 +66,9 @@ public class UserController {
      */
     @Autowired
     private EmailBuilder emailBuilder;
+
+    @Autowired
+    private StudentTeacherService studentTeacherService;
 
     /**
      * Initiates the process of recovering a forgotten username by sending an email to the user.
@@ -188,7 +193,10 @@ public class UserController {
             throw new UserNotFoundException("User With Email "+email+"Is Not Found");
         }
         ConfirmationToken token = (confirmationTokenService.getTokenByEmail(email));
-        String link = userService.getDomain()+"/v1/user/confirm?token=" + token;
+        token.setCreatedAt(LocalDateTime.now());
+        token.setExpiresAt(LocalDateTime.now().plusMinutes(15));
+        confirmationTokenService.saveConfirmationToken(token);
+        String link = userService.getDomain()+"/v1/user/confirm?token=" + token.getToken();
         System.out.println(link);
         emailSender.send(
                 user.getEmail(),
@@ -290,5 +298,85 @@ public class UserController {
             return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"Password Updated Successfully",null));
         }
         throw new IllegalStateException("invalid username");
+    }
+
+
+
+
+    // student teacher related controleer
+    /**
+     * Creates a new user account, sends a confirmation email, and returns the registered user's details.
+     *
+     * @param user The User object representing the new user's details.
+     * @return A ResponseEntity containing a CustomResponse with a timestamp, a message indicating the registration's success,
+     *         and the registered user's details. Returns 200 OK if the registration process is successful.
+     * @throws IllegalStateException If the provided email is not valid.
+     * @throws Exception If there's an issue with creating the user or sending the confirmation email.
+     */
+    @PostMapping("/teacher/")
+    public ResponseEntity<CustomResponse> createTeacher(@RequestBody User user){
+
+        boolean isValidEmail = emailValidator.test(user.getEmail());
+        if(!isValidEmail){
+            throw new IllegalStateException("email not valid");
+        }
+        Set<UserRole> roles = new HashSet<>();
+
+        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+
+        Role role = new Role();
+        role.setRoleId(46l);
+        role.setRoleName("TEACHER");
+
+        UserRole userRole = new UserRole();
+        userRole.setUser(user);
+        userRole.setRole(role);
+
+        roles.add(userRole);
+
+        try {
+            user = this.userService.createUser(user,roles);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        String token = UUID.randomUUID().toString();
+        ConfirmationToken confirmationToken = new ConfirmationToken(
+                token,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusMinutes(15),
+                user
+        );
+        confirmationTokenService.saveConfirmationToken(
+                confirmationToken
+        );
+        // TODO : Send Email
+        String link = userService.getDomain()+"/v1/user/confirm?token=" + token;
+        System.out.println(link);
+        emailSender.send(
+                user.getEmail(),
+                emailBuilder.buildEmail(user.getFirstName(), link));
+
+
+        return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"Registration Successfull Done as Teacher",user));
+
+
+
+    }
+
+    @PostMapping("/teacher/{teacherUsername}/{studentUsername}")
+    public ResponseEntity<CustomResponse> associateStudentToTeacher(@PathVariable("teacherUsername") String teacherUsername, @PathVariable("studentUsername") String studentUsername){
+        User teacher = userService.getUser(teacherUsername);
+        User student = userService.getUser(studentUsername);
+        studentTeacherService.createRelationshipBetweenStudentAndTeacher(student.getId(),teacher.getId());
+
+    return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"student Added to the teacher",null));
+    }
+
+    @GetMapping("/teacher/{teacherUsername}/students")
+    public ResponseEntity<CustomResponse> getStudentsOfTeacher(@PathVariable("teacherUsername") String teacherUsername) {
+        User teacher = userService.getUser(teacherUsername);
+        List<User> students = studentTeacherService.getStudentsOfTeacher(teacher.getId());
+    return ResponseEntity.ok(new CustomResponse(LocalDateTime.now(),"all students of this teacher",students));
     }
 }
