@@ -28,7 +28,7 @@ public class ExamserverApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		 System.out.println("Starting Code");
-//		createAdmin();
+		//createAdmin();
 		System.out.println(this.userService.getUser("ayush15"));
 
 
